@@ -56,7 +56,7 @@ public:
 	}
 };
 
-class MainContentComponent   : public Component, public RNBO::PatcherChangedHandler, public AsyncUpdater
+class MainContentComponent   : public Component, public RNBO::PatcherChangedHandler, public AsyncUpdater, public OSCReceiver, public OSCReceiver::ListenerWithOSCAddress<OSCReceiver::MessageLoopCallback>
 {
 public:
 
@@ -118,6 +118,9 @@ public:
 		_keyboardFocusGrabber = RNBO::make_unique<GrabFocusWhenShownComponentMovementWatcher>(&_midiKeyboardComponent);
 
 		setSize (800, 494);
+        
+        connect(4444);
+        addListener(this, "/juce");
     }
 
 	void patcherChanged() override
@@ -179,7 +182,16 @@ public:
 		shutdownAudio();
     }
 
-
+    void oscMessageReceived (const OSCMessage &message) override
+       {
+           if (message.size() == 2 && message[0].isInt32() && message[1].isString())
+           {
+               int theMessage = message[0].getInt32();
+               String theString = message[1].getString();
+               std::cout << theMessage << " " << theString << std::endl;
+           }
+       }
+    
     //=======================================================================
     void paint (Graphics& g) override
     {
